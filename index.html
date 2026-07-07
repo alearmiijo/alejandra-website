@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alejandra Armijo — Film Editor</title>
+<style>
+  :root{
+    --red:#e8433d;
+    --ink:#1c0d0a;
+    --paper:#ffffff;
+    --yellow:#f4e94a;
+    --gray:#888;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Helvetica Neue', Arial, sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+
+  /* ---------- HOME ---------- */
+  #home{
+    background:#0a0a0a;
+    min-height:100vh;
+    position:relative;
+  }
+  #home.active{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .home-timeline{
+    position:absolute;
+    top:60px; left:0; right:0;
+    width:100%;
+    height:110px;
+  }
+  .home-playhead{
+    animation:playhead-move 9s ease-in-out infinite;
+  }
+  @keyframes playhead-move{
+    0%{transform:translateX(0);}
+    50%{transform:translateX(calc(90vw - 80px));}
+    100%{transform:translateX(0);}
+  }
+  .home-row{
+    display:flex;
+    justify-content:center;
+    gap:40px;
+  }
+  .home-word{
+    font-weight:900;
+    font-size:13px;
+    letter-spacing:0.02em;
+    opacity:0.95;
+    cursor:pointer;
+    transition:opacity .15s ease, transform .15s ease;
+    user-select:none;
+  }
+  .home-word:hover{opacity:1; transform:translateY(-2px);}
+  .home-socials{
+    position:absolute;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    gap:18px;
+  }
+  .home-socials a{
+    width:18px;height:18px;
+    display:flex;align-items:center;justify-content:center;
+    opacity:.85;
+    transition:opacity .15s;
+  }
+  .home-socials a:hover{opacity:1;}
+  .home-socials svg{width:100%; height:100%;}
+
+  /* ---------- NAV (shared) ---------- */
+  .topbar{
+    display:flex;
+    align-items:center;
+    padding:24px 32px;
+    border-bottom:1px solid #eee;
+    position:sticky;
+    top:0;
+    background:var(--paper);
+    z-index:50;
+  }
+  .topbar .tag{
+    background:var(--red);
+    color:var(--paper);
+    font-weight:800;
+    font-size:12px;
+    letter-spacing:0.08em;
+    padding:6px 14px;
+    border-radius:2px;
+    margin-right:auto;
+    cursor:pointer;
+  }
+  .topbar nav{display:flex;gap:28px;font-weight:700;font-size:13px;letter-spacing:.06em;}
+  .topbar nav a{opacity:.55; transition:opacity .15s;}
+  .topbar nav a:hover, .topbar nav a.active{opacity:1;}
+
+  section.page{display:none; min-height:100vh;}
+  section.page.active{display:block;}
+
+  /* ---------- WORK GRID ---------- */
+  #work{padding:32px;}
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    gap:28px 20px;
+  }
+  .tile{cursor:pointer;}
+  .poster{
+    width:100%;
+    aspect-ratio:2/3;
+    background:#111;
+    border-radius:2px;
+    position:relative;
+    overflow:hidden;
+    transition:transform .2s ease;
+  }
+  .poster img{
+    width:100%; height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .tile:hover .poster{transform:scale(1.02);}
+  .tile .cap{margin-top:8px; font-style:italic; font-size:13px;}
+
+  /* ---------- GALLERY MODAL ---------- */
+  .modal-overlay{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(0,0,0,.94);
+    z-index:200;
+    align-items:center;
+    justify-content:center;
+  }
+  .modal-overlay.active{display:flex;}
+  .modal-close{
+    position:absolute; top:24px; left:32px;
+    color:#fff; font-size:13px; font-weight:700;
+    letter-spacing:.05em; cursor:pointer;
+    z-index:10;
+    padding:8px;
+  }
+  .gallery-caption{
+    position:absolute; top:24px; left:0; right:0;
+    text-align:center; color:#fff; font-weight:700; font-size:15px;
+    padding:0 100px;
+    pointer-events:none;
+  }
+  .gallery-stage{
+    width:80%; max-width:1000px;
+    aspect-ratio:16/9;
+    background:#181818;
+    display:flex; align-items:center; justify-content:center;
+    color:#666; font-weight:700; font-size:14px;
+    position:relative;
+    border-radius:2px;
+  }
+  .arrow{
+    position:absolute; top:50%; transform:translateY(-50%);
+    color:#fff; font-size:28px; cursor:pointer;
+    width:44px;height:44px;
+    display:flex;align-items:center;justify-content:center;
+    opacity:.7; transition:opacity .15s;
+  }
+  .arrow:hover{opacity:1;}
+  .arrow.prev{left:-70px;}
+  .arrow.next{right:-70px;}
+  .imdb-link{
+    position:absolute; bottom:-52px; left:50%; transform:translateX(-50%);
+    background:#f5c518; color:#000; font-weight:800; font-size:12px;
+    padding:8px 18px; border-radius:3px; letter-spacing:.03em;
+  }
+
+  /* ---------- INFO ---------- */
+  #info{padding:40px 32px; max-width:1100px; margin:0 auto;}
+  .info-grid{display:grid; grid-template-columns:1fr 1.4fr; gap:60px;}
+  .info-block{border-bottom:1px solid #ddd; padding:18px 0;}
+  .info-block h4{margin:0 0 10px; font-size:13px; letter-spacing:.05em; text-transform:uppercase;}
+  .bio{font-style:italic; line-height:1.6; font-size:15px;}
+  .bio p{margin:0 0 16px;}
+  .services-grid{display:grid; grid-template-columns:1fr 1fr; gap:0 24px;}
+  .services-grid div{border-bottom:1px solid #ddd; padding:10px 0; font-weight:600; font-size:14px;}
+  .cv-btn{
+    display:inline-block; margin-top:20px;
+    background:var(--yellow); font-weight:800; font-size:13px;
+    padding:12px 30px; border-radius:3px; cursor:pointer;
+  }
+
+  footer{text-align:center; padding:20px; font-size:12px; color:#999;}
+
+  @media (max-width:700px){
+    .home-word{font-size:14vw;}
+    .info-grid{grid-template-columns:1fr; gap:24px;}
+    .arrow.prev{left:8px;}
+    .arrow.next{right:8px;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HOMEPAGE ============ -->
+<section id="home" class="page active">
+  <svg class="home-timeline" viewBox="0 0 680 110" preserveAspectRatio="none">
+    <line x1="30" y1="20" x2="150" y2="19" stroke="#4f8fc4" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="166" y1="21" x2="240" y2="20" stroke="#4f8fc4" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="256" y1="19" x2="420" y2="21" stroke="#4f8fc4" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="436" y1="20" x2="560" y2="19" stroke="#4f8fc4" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="576" y1="21" x2="650" y2="20" stroke="#4f8fc4" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="30" y1="32" x2="200" y2="31" stroke="#8f6bc9" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="216" y1="33" x2="330" y2="32" stroke="#8f6bc9" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="346" y1="31" x2="520" y2="33" stroke="#8f6bc9" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="536" y1="32" x2="650" y2="31" stroke="#8f6bc9" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+    <line x1="30" y1="44" x2="180" y2="43" stroke="#3ecf8e" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="196" y1="45" x2="360" y2="43" stroke="#3ecf8e" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="376" y1="44" x2="480" y2="45" stroke="#3ecf8e" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="496" y1="43" x2="650" y2="44" stroke="#3ecf8e" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="30" y1="56" x2="140" y2="55" stroke="#f4c430" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="156" y1="57" x2="310" y2="55" stroke="#f4c430" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="326" y1="56" x2="470" y2="57" stroke="#f4c430" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <line x1="486" y1="55" x2="650" y2="56" stroke="#f4c430" stroke-width="5" stroke-linecap="round" opacity="0.85"/>
+    <g class="home-playhead">
+      <line x1="40" y1="10" x2="40" y2="66" stroke="#f4f1ea" stroke-width="1.2"/>
+      <polygon points="34,10 46,10 40,18" fill="#f4f1ea"/>
+    </g>
+  </svg>
+  <div class="home-row">
+    <div class="home-word" style="color:#e8433d" onclick="window.open('https://www.imdb.com/name/nm10853224/','_blank')">IMDB</div>
+    <div class="home-word" style="color:#f4c430" onclick="go('info')">INFO</div>
+    <div class="home-word" style="color:#3ecf8e" onclick="go('work')">WORK</div>
+    <div class="home-word" style="color:#4f8fc4" onclick="openContact()">MAIL</div>
+  </div>
+  <div class="home-socials">
+    <a href="https://www.instagram.com/alearmiijo/?hl=en" title="Instagram" target="_blank">
+      <svg viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="igGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#f9ce34"/>
+            <stop offset="30%" stop-color="#ee2a7b"/>
+            <stop offset="65%" stop-color="#6228d7"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="20" height="20" rx="5.5" fill="url(#igGradient)"/>
+        <circle cx="12" cy="12" r="4.2" fill="none" stroke="#fff" stroke-width="1.6"/>
+        <circle cx="17.3" cy="6.7" r="1.1" fill="#fff"/>
+      </svg>
+    </a>
+    <a href="https://www.linkedin.com/in/alejandra-armijo-247872153/" title="LinkedIn" target="_blank">
+      <svg viewBox="0 0 24 24">
+        <rect x="2" y="2" width="20" height="20" rx="3" fill="#0A66C2"/>
+        <path fill="#fff" d="M7.2 9.5h2.6v8.3H7.2V9.5zm1.3-4.1a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM11.4 9.5h2.5v1.14h.03c.35-.63 1.2-1.3 2.47-1.3 2.64 0 3.13 1.66 3.13 3.82v4.64h-2.6v-4.11c0-.98-.02-2.24-1.4-2.24-1.4 0-1.62 1.06-1.62 2.16v4.19h-2.6V9.5z"/>
+      </svg>
+    </a>
+  </div>
+</section>
+
+<!-- ============ SHARED TOPBAR FOR OTHER PAGES ============ -->
+<div class="topbar" id="topbar" style="display:none;">
+  <div class="tag" onclick="go('home')">AA</div>
+  <nav>
+    <a href="#" onclick="go('work')" data-nav="work">Work</a>
+    <a href="#" onclick="go('info')" data-nav="info">Info</a>
+    <a href="#" onclick="openContact()">Mail</a>
+    <a href="https://www.imdb.com/name/nm10853224/" target="_blank">IMDb</a>
+  </nav>
+</div>
+
+<!-- ============ WORK PAGE ============ -->
+<section id="work" class="page">
+  <div class="grid" id="workGrid"></div>
+</section>
+
+<!-- ============ INFO PAGE ============ -->
+<section id="info" class="page">
+  <div class="info-grid">
+    <div>
+      <div class="info-block">
+        <h4>Contact</h4>
+        c.alearmijo@gmail.com<br>@alearmiijo
+      </div>
+      <div class="info-block">
+        <h4>Services</h4>
+        <div class="services-grid">
+          <div>Narrative & Story Editing</div><div>Post Production Support</div>
+          <div>Assistant Editing</div><div>Consulting & Advisory</div>
+        </div>
+      </div>
+      <div class="info-block">
+        <h4>Languages</h4>
+        Spanish — Native<br>English — Fluent
+      </div>
+      <a class="cv-btn" href="images/ale-armijo-cv.pdf" target="_blank">CV</a>
+      <img src="images/headshot.jpeg" alt="Alejandra Armijo" style="width:100%; margin-top:24px; border-radius:2px;">
+    </div>
+    <div class="bio">
+      <p>Alejandra Armijo is a Latina film editor originally from La Paz, Bolivia. She earned her MFA in Film Editing from the American Film Institute in 2023, following a 2020 internship with the Academy of Motion Picture Arts and Sciences that first pulled her into the industry.</p>
+      <p>Her AFI thesis work includes "Bajo La Tierra" and "The Bullfighter." Her short "Skin" won the Gold Medal at the 2023 Student Academy Awards and screened at Oslo Fusion International Film Festival.</p>
+      <p>Since then, she's built a freelance editing practice spanning feature films, shorts, and digital narrative content — cutting across drama, comedy, and horror, and carrying stories from assembly to final delivery. Selected work includes Hooperella and Rata (both through the LFI x Netflix Inclusion Fellowship), Tether, and Los Lamentos, alongside lead editor roles on serialized digital productions for MiniDramaStream (Dramabox) and Crazy Maple Studio (Reelshort).</p>
+      <p>Alejandra is a Gloria Schoemann Editors Fellow (The Latinx House x Adobe, 2024) and an alum of the Academy Gold Rising Program. She's currently expanding into animation editing, and remains endlessly curious about the psychology behind why stories move us — for her, editing is where a film finds its emotional truth, the place where an audience's catharsis actually gets built, frame by frame.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALLERY MODAL ============ -->
+<div class="modal-overlay" id="galleryModal">
+  <div class="modal-close" onclick="closeGallery()">(Close)</div>
+  <div class="gallery-caption" id="galleryCaption"></div>
+  <div class="gallery-stage">
+    <div class="arrow prev" onclick="shiftStill(-1)">‹</div>
+    <img id="stillImg" src="" alt="" style="max-width:100%; max-height:100%; object-fit:contain;">
+    <div class="arrow next" onclick="shiftStill(1)">›</div>
+    <a class="imdb-link" id="imdbLink" href="#" target="_blank">View on IMDb</a>
+  </div>
+</div>
+
+<!-- ============ CONTACT MODAL ============ -->
+<div class="modal-overlay" id="contactModal">
+  <div style="background:#fff; width:90%; max-width:500px; border-radius:6px; padding:24px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:16px;">
+      <strong>Contact</strong>
+      <span style="cursor:pointer;" onclick="closeContact()">✕</span>
+    </div>
+    <form id="contactForm">
+      <input type="email" id="contactFrom" name="email" placeholder="From: (enter your email address)..." style="width:100%; border:none; border-bottom:1px solid #eee; padding:10px 0; margin-bottom:16px; font-size:14px;">
+      <textarea id="contactMessage" name="message" placeholder="Write your message..." rows="6" style="width:100%; border:none; resize:vertical; font-size:14px;"></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+        <button type="button" style="background:#eee; border:none; padding:10px 20px; border-radius:4px; cursor:pointer;" onclick="closeContact()">Cancel</button>
+        <button type="button" id="contactSendBtn" style="background:#000; color:#fff; border:none; padding:10px 20px; border-radius:4px; cursor:pointer;" onclick="sendContactEmail()">Send</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ---------- PROJECT DATA ----------
+// `stills` currently just repeats the poster since individual stills haven't been uploaded yet.
+// Once you send 3-4 real stills per project, swap the arrays below (e.g. ["images/skin-1.jpg","images/skin-2.jpg",...])
+const projects = [
+  {title:"Andromeda", poster:"images/andromeda.jpg", imdb:"https://www.imdb.com/title/tt11101818/"},
+  {title:"Body Check", poster:"images/body-check.jpg", imdb:"https://www.imdb.com/title/tt38773628/"},
+  {title:"Reir Llorando", poster:"images/reir-llorando.jpg", imdb:"https://www.imdb.com/title/tt33378527/"},
+  {title:"Rata", poster:"images/rata.jpg", imdb:"https://www.imdb.com/title/tt32385354/"},
+  {title:"Hooperella", poster:"images/hooperella.jpg", imdb:"https://www.imdb.com/title/tt40389383/"},
+  {title:"Skin", poster:"images/skin.jpg", imdb:"https://www.imdb.com/title/tt27921589/"},
+  {title:"Tether", poster:"images/tether.jpg", imdb:"https://www.imdb.com/title/tt30325045/"},
+  {title:"Bajo La Tierra", poster:"images/bajo-la-tierra.jpg", imdb:"https://www.imdb.com/title/tt29491678/"},
+  {title:"The Bullfighter", poster:"images/the-bullfighter.jpg", imdb:"https://www.imdb.com/title/tt27999944/"},
+  {title:"The Qingming Kid", poster:"images/qingming-kid.jpg", imdb:"https://www.imdb.com/title/tt28208714/"},
+  {title:"Un Gol A Tu Corazón", poster:"images/un-gol-a-tu-corazon.jpg", imdb:"https://www.imdb.com/title/tt35304053/"},
+  {title:"You Are My Destiny", poster:"images/you-are-my-destiny.jpg", imdb:"https://www.imdb.com/title/tt37969123/"},
+  {title:"Revenge Puck", poster:"images/revenge-puck.jpg", imdb:"https://www.imdb.com/title/tt43346443/"},
+  {title:"Think Again! I'm The Hidden Boss Mom", poster:"images/hidden-boss-mom.jpg", imdb:"https://www.imdb.com/title/tt42992774/"},
+  {title:"Claimed By The Alpha I Hate", poster:"images/claimed-by-the-alpha.jpg", imdb:"https://www.imdb.com/title/tt35951317/"},
+  {title:"Fake Dating The Quarterback On Christmas", poster:"images/fake-dating-quarterback.jpg", imdb:"https://www.imdb.com/title/tt39195538/"},
+];
+
+const grid = document.getElementById('workGrid');
+projects.forEach((p, i) => {
+  const tile = document.createElement('div');
+  tile.className = 'tile';
+  tile.onclick = () => openGallery(i);
+  tile.innerHTML = `<div class="poster"><img src="${p.poster}" alt="${p.title}"></div><div class="cap">${p.title}</div>`;
+  grid.appendChild(tile);
+});
+
+// ---------- NAV ----------
+function go(id){
+  document.querySelectorAll('.page').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('topbar').style.display = (id === 'home') ? 'none' : 'flex';
+  document.querySelectorAll('[data-nav]').forEach(a => a.classList.toggle('active', a.dataset.nav === id));
+  window.scrollTo(0,0);
+}
+
+// ---------- GALLERY ----------
+let currentProject = 0, currentStill = 0;
+function openGallery(i){
+  currentProject = i; currentStill = 0;
+  renderStill();
+  document.getElementById('galleryModal').classList.add('active');
+}
+function closeGallery(){ document.getElementById('galleryModal').classList.remove('active'); }
+function shiftStill(dir){
+  // Only the poster is available per project right now — once real stills are added
+  // this will cycle through p.stills (an array of image paths) instead.
+  renderStill();
+}
+function renderStill(){
+  const p = projects[currentProject];
+  document.getElementById('galleryCaption').textContent = p.title;
+  document.getElementById('stillImg').src = p.poster;
+  document.getElementById('stillImg').alt = p.title;
+  const imdbBtn = document.getElementById('imdbLink');
+  if(p.imdb){
+    imdbBtn.style.display = 'inline-block';
+    imdbBtn.href = p.imdb;
+  } else {
+    imdbBtn.style.display = 'none';
+  }
+}
+
+// ---------- CONTACT ----------
+function openContact(){ document.getElementById('contactModal').classList.add('active'); }
+function closeContact(){ document.getElementById('contactModal').classList.remove('active'); }
+function sendContactEmail(){
+  const fromEmail = document.getElementById('contactFrom').value.trim();
+  const message = document.getElementById('contactMessage').value.trim();
+  if(!fromEmail || !message){
+    alert('Please fill in both your email and a message before sending.');
+    return;
+  }
+  const endpoint = 'https://formspree.io/f/xvzjnapk';
+  const sendBtn = document.getElementById('contactSendBtn');
+  sendBtn.textContent = 'Sending...';
+  sendBtn.disabled = true;
+
+  fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json' },
+    body: new FormData(document.getElementById('contactForm'))
+  })
+  .then(response => {
+    if(response.ok){
+      alert('Message sent! Thanks for reaching out.');
+      document.getElementById('contactForm').reset();
+      closeContact();
+    } else {
+      alert('Something went wrong sending your message. Please try again or email directly.');
+    }
+  })
+  .catch(() => {
+    alert('Something went wrong sending your message. Please try again or email directly.');
+  })
+  .finally(() => {
+    sendBtn.textContent = 'Send';
+    sendBtn.disabled = false;
+  });
+}
+
+// ---------- SAFETY NETS: click outside + Escape key ----------
+document.getElementById('galleryModal').addEventListener('click', function(e){
+  if(e.target === this) closeGallery();
+});
+document.getElementById('contactModal').addEventListener('click', function(e){
+  if(e.target === this) closeContact();
+});
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape'){ closeGallery(); closeContact(); }
+});
+</script>
+</body>
+</html>
